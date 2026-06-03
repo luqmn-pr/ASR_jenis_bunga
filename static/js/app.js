@@ -11,11 +11,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const mfccImage = document.getElementById('mfccImage');
     const modelSelect = document.getElementById('modelSelect');
     
+    // Elemen TTS
+    const ttsText = document.getElementById('ttsText');
+    const ttsGender = document.getElementById('ttsGender');
+    const ttsSpeed = document.getElementById('ttsSpeed');
+    const ttsBtn = document.getElementById('ttsBtn');
+    const ttsDownloadBtn = document.getElementById('ttsDownloadBtn');
+    const ttsAudioContainer = document.getElementById('ttsAudioContainer');
+    const ttsAudioPlayer = document.getElementById('ttsAudioPlayer');
+
     // Update tulisan badge di header jika opsi model berubah
-    const statusBadge = document.querySelector('.status-badge');
+    const activeModelName = document.getElementById('activeModelName');
     modelSelect.addEventListener('change', () => {
-        let modelName = modelSelect.options[modelSelect.selectedIndex].text.split(' (')[0];
-        statusBadge.innerHTML = `<span class="pulse-dot"></span> Model Aktif: ${modelName}`;
+        if(activeModelName) {
+            let modelName = modelSelect.options[modelSelect.selectedIndex].text.split(' (')[0];
+            activeModelName.textContent = modelName;
+        }
     });
 
     let mediaRecorder;
@@ -114,6 +125,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Tampilkan Hasil
                 predText.textContent = result.prediction;
                 
+                // --- INTEGRASI ASR KE TTS ---
+                ttsText.value = result.prediction; // Isi otomatis textarea TTS
+                // ----------------------------
+                
                 // Set Bar & Value Confidence
                 confValue.textContent = `${result.confidence}%`;
                 setTimeout(() => {
@@ -139,6 +154,56 @@ document.addEventListener('DOMContentLoaded', () => {
             recordText.textContent = "Mulai Rekam (2 Detik)";
         }
     }
+
+    // --- Logika TTS (Text to Speech) ---
+    ttsBtn.addEventListener('click', async () => {
+        const text = ttsText.value.trim();
+        if (!text) {
+            alert("Silakan ketik atau dapatkan hasil teks terlebih dahulu!");
+            return;
+        }
+
+        const gender = ttsGender.value;
+        const speed = ttsSpeed.value;
+
+        // UI State: Loading
+        const originalBtnHTML = ttsBtn.innerHTML;
+        ttsBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses...';
+        ttsBtn.disabled = true;
+        ttsDownloadBtn.style.display = 'none';
+        ttsAudioContainer.style.display = 'none';
+
+        try {
+            const response = await fetch('/tts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text, gender, speed })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                ttsAudioPlayer.src = result.audio_url;
+                ttsDownloadBtn.href = result.audio_url;
+                
+                ttsAudioContainer.style.display = 'block';
+                ttsDownloadBtn.style.display = 'inline-block';
+                
+                // Autoplay
+                ttsAudioPlayer.play();
+            } else {
+                alert(`Error TTS: ${result.error || 'Terjadi kesalahan'}`);
+            }
+        } catch (error) {
+            console.error("Error TTS:", error);
+            alert("Error komunikasi dengan server saat TTS.");
+        } finally {
+            // UI State: Reset
+            ttsBtn.innerHTML = originalBtnHTML;
+            ttsBtn.disabled = false;
+        }
+    });
+
 });
 
 // Utility Function: Convert AudioBuffer to True PCM WAV Blob

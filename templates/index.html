@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice Recognition - Bunga</title>
+    <title>Bloom Socials | Voice Recognition Bunga</title>
     
-    <!-- Google Fonts: Inter -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Outfit (Sans), Playfair Display (Serif), Great Vibes (Script) -->
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -19,21 +20,22 @@
 <body>
 
     <div class="app-container">
-        <!-- Header -->
-        <header class="app-header">
-            <div class="logo">
-                <i class="fa-solid fa-seedling"></i> ASR Bunga ID
-            </div>
+        
+        <!-- Hero Header -->
+        <header class="hero-header">
+            <div class="hero-subtitle">Est. 2026</div>
+            <h1 class="hero-title">Bloom Socials</h1>
+            <p class="hero-desc">Platform Cerdas Pengenalan Suara Bunga Berbasis AI</p>
             <div class="status-badge">
-                <span class="pulse-dot"></span> Model Aktif: CNN-1D
+                <span class="pulse-dot"></span> Model Aktif: <span id="activeModelName">CNN-1D</span>
             </div>
         </header>
 
         <!-- Main Content -->
         <main class="main-content">
             
-            <section class="model-selection glass-card" style="margin-bottom: 2rem;">
-                <label for="modelSelect" style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.95rem;">Pilih Model Prediksi:</label>
+            <section class="neo-card model-section">
+                <label for="modelSelect">Pilih Model Kecerdasan Buatan</label>
                 <div class="select-wrapper">
                     <select id="modelSelect" class="custom-select">
                         <option value="cnn">CNN-1D (Convolutional Neural Network) - Terbaik</option>
@@ -45,47 +47,105 @@
                 </div>
             </section>
 
-            <section class="record-section glass-card">
-                <h2>Coba Sekarang</h2>
-                <p>Ucapkan salah satu dari 10 nama bunga: <b>Alamanda, Anggrek, Dahlia, Krisan, Lily, Matahari, Mawar, Melati, Teratai, Tulip</b>.</p>
-                
-                <div class="recorder-wrapper">
-                    <div class="mic-wave" id="micWave">
-                        <span></span><span></span><span></span><span></span><span></span>
-                    </div>
-                    <button id="recordBtn" class="record-btn">
-                        <i class="fa-solid fa-microphone"></i>
-                        <span id="recordText">Mulai Rekam (2 Detik)</span>
-                    </button>
-                </div>
-                <div id="statusMessage" class="status-message">Siap merekam...</div>
-            </section>
+            <div class="two-column-layout">
+                <!-- Kolom Kiri: ASR (Rekam & Hasil) -->
+                <div class="left-column">
+                    <section class="neo-card record-section">
+                        <h2>Coba Pengenalan Suara</h2>
+                        <p>Sebutkan salah satu dari koleksi bunga kami: <br>
+                        <b>Alamanda, Anggrek, Dahlia, Krisan, Lily, Matahari, Mawar, Melati, Teratai, Tulip</b>.</p>
+                        
+                        <div class="recorder-wrapper">
+                            <div class="mic-wave" id="micWave">
+                                <span></span><span></span><span></span><span></span><span></span>
+                            </div>
+                            <button id="recordBtn" class="primary-btn">
+                                <i class="fa-solid fa-microphone"></i>
+                                <span id="recordText">Mulai Rekam (2 Detik)</span>
+                            </button>
+                        </div>
+                        <div id="statusMessage" class="status-message">Siap mendengarkan suara Anda.</div>
+                    </section>
 
-            <section class="result-section glass-card" id="resultSection" style="display: none;">
-                <h2>Hasil Prediksi</h2>
-                
-                <div class="prediction-box">
-                    <div class="pred-label">Suara Anda terdeteksi sebagai bunga:</div>
-                    <div class="pred-text" id="predText">Mawar</div>
+                    <section class="neo-card result-section" id="resultSection" style="display: none;">
+                        <h2>Hasil Identifikasi</h2>
+                        
+                        <div class="prediction-box">
+                            <div class="pred-label">Suara Anda terdeteksi sebagai:</div>
+                            <div class="pred-text" id="predText">Mawar</div>
+                        </div>
+
+                        <div class="confidence-box">
+                            <div class="conf-label">Tingkat Keyakinan (Confidence Score)</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="confProgress"></div>
+                            </div>
+                            <div class="conf-value" id="confValue">98.5%</div>
+                        </div>
+
+                        <div class="mfcc-box">
+                            <div class="mfcc-label">Visualisasi Ekstraksi Fitur (MFCC)</div>
+                            <div class="image-wrapper">
+                                <img id="mfccImage" src="" alt="MFCC Spectrogram">
+                            </div>
+                        </div>
+                    </section>
                 </div>
 
-                <div class="confidence-box">
-                    <div class="conf-label">Tingkat Keyakinan (Confidence Score)</div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="confProgress"></div>
+                <!-- Kolom Kanan: TTS -->
+                <div class="right-column">
+                    <section class="neo-card tts-section">
+                    <h2>Text to Speech (TTS)</h2>
+                    <p class="tts-desc">Dengarkan nama bunga atau teks bebas dengan suara AI natural.</p>
+                    
+                    <div class="form-group">
+                        <textarea id="ttsText" class="tts-textarea" rows="3" placeholder="Teks akan muncul di sini..."></textarea>
                     </div>
-                    <div class="conf-value" id="confValue">98.5%</div>
-                </div>
 
-                <div class="mfcc-box">
-                    <div class="mfcc-label">Visualisasi Ekstraksi Fitur MFCC</div>
-                    <div class="image-wrapper">
-                        <img id="mfccImage" src="" alt="MFCC Spectrogram">
+                    <div class="tts-controls">
+                        <div class="form-group">
+                            <label for="ttsGender">Gender Suara</label>
+                            <div class="select-wrapper">
+                                <select id="ttsGender" class="custom-select">
+                                    <option value="female">Perempuan (Gadis)</option>
+                                    <option value="male">Laki-laki (Ardi)</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down select-icon"></i>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="ttsSpeed">Kecepatan</label>
+                            <div class="select-wrapper">
+                                <select id="ttsSpeed" class="custom-select">
+                                    <option value="normal" selected>Normal</option>
+                                    <option value="slow">Lambat</option>
+                                    <option value="fast">Cepat</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down select-icon"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tts-actions">
+                        <button id="ttsBtn" class="secondary-btn">
+                            <i class="fa-solid fa-volume-up"></i> Generate Suara
+                        </button>
+                        <a id="ttsDownloadBtn" class="download-btn" style="display: none;" download="bloom_tts.mp3">
+                            <i class="fa-solid fa-download"></i> Unduh MP3
+                        </a>
+                    </div>
+
+                    <div id="ttsAudioContainer" class="audio-container" style="display: none;">
+                        <audio id="ttsAudioPlayer" controls></audio>
                     </div>
                 </div>
-            </section>
+            </div>
 
         </main>
+        
+        <footer class="app-footer">
+            <p>&copy; 2026 Bloom Socials. Pengenalan Suara Berbasis Kecerdasan Buatan.</p>
+        </footer>
     </div>
 
     <!-- Script -->

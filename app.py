@@ -6,6 +6,7 @@ import joblib
 from utils import preprocess_audio, extract_mfcc, generate_mfcc_plot, predict_with_hmm
 import uuid
 import time
+import subprocess
 
 app = Flask(__name__)
 
@@ -121,6 +122,62 @@ def predict():
         print(f"Error during prediction:\n{traceback.format_exc()}")
         if os.path.exists(audio_path):
             os.remove(audio_path)
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/tts', methods=['POST'])
+def generate_tts():
+    try:
+        data = request.get_json()
+        if not data or 'text' not in data:
+            return jsonify({'error': 'Teks tidak ditemukan.'}), 400
+
+        text = data.get('text', '').strip()
+        gender = data.get('gender', 'female')
+        speed = data.get('speed', 'normal')
+
+        if not text:
+            return jsonify({'error': 'Teks kosong.'}), 400
+
+        # Tentukan Voice berdasarkan gender
+        # id-ID-ArdiNeural (Laki-laki), id-ID-GadisNeural (Perempuan)
+        voice = 'id-ID-ArdiNeural' if gender == 'male' else 'id-ID-GadisNeural'
+
+        # Tentukan Kecepatan (Rate)
+        if speed == 'slow':
+            rate = '-30%'
+        elif speed == 'fast':
+            rate = '+30%'
+        else:
+            rate = '+0%'
+
+        unique_id = str(uuid.uuid4())
+        output_filename = f"tts_{unique_id}.mp3"
+        output_path = os.path.join(TEMP_DIR, output_filename)
+
+        # Jalankan edge-tts via subprocess
+        command = [
+            'edge-tts',
+            '--text', text,
+            '--voice', voice,
+            f'--rate={rate}',
+            '--write-media', output_path
+        ]
+        
+        result = subprocess.run(command, capture_output=True, text=True)
+        if result.returncode != 0:
+            return jsonify({'error': 'Gagal generate TTS. Pastikan edge-tts terinstal (pip install edge-tts).'}), 500
+
+        audio_url = f"{url_for('static', filename='temp/' + output_filename)}?t={int(time.time())}"
+        
+        return jsonify({
+            'success': True,
+            'audio_url': audio_url
+        })
+
+    except Exception as e:
+        import traceback
+        print(f"Error during TTS:\n{traceback.format_exc()}")
         return jsonify({'error': str(e)}), 500
 
 
